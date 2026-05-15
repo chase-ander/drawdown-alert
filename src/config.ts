@@ -57,7 +57,8 @@ function parseRatio(raw: string | undefined, defaultVal: number): number {
 /**
  * Validates process.env once per invocation.
  *
- * When `dryRun` is true, recipients and API key can be omitted.
+ * When `dryRun` is true, recipients and API key can be omitted; if both are
+ * set, a real daily status email is sent during `--dry-run` on each run.
  */
 export function loadConfig(dryRun: boolean): AppConfig {
   const parsed = rawEnvSchema.safeParse(process.env);

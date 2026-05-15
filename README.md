@@ -7,7 +7,7 @@ After the US cash close, a **Render cron job** pulls daily S&P closes, checks wh
 1. **Cron** — `node dist/index.js` on a weekday schedule (UTC) after the bell.
 2. **Price feed** — Yahoo Finance via `yahoo-finance2` `chart()` (daily bars).
 3. **Pure decision core** — [`src/decision.ts`](src/decision.ts) implements the crossing test and the “missed day” scan (see file header).
-4. **Email** — Resend HTTP API when not in `--dry-run`.
+4. **Email** — Resend HTTP API (including during `--dry-run` when `ALERT_EMAILS` and `RESEND_API_KEY` are set).
 
 ```mermaid
 flowchart LR
@@ -45,7 +45,7 @@ npm run build
 | `LOOKBACK_DAYS` | `1825` | Calendar span for the Yahoo request (ATH is max over returned history) |
 | `MISSED_RUN_LOOKBACK` | `3` | How many latest **trading sessions** to inspect for a missed crossing |
 | `ALERT_EMAILS` | — | Comma-separated inbox list |
-| `RESEND_API_KEY` | — | API token (not required with `--dry-run`) |
+| `RESEND_API_KEY` | — | API token (optional with `--dry-run` unless you want a real email on alert) |
 | `RESEND_FROM` | `onboarding@resend.dev` | Verified From address |
 
 ATH in emails is “all-time high **within the fetched lookback**”, not since 1871. Increase `LOOKBACK_DAYS` if you need more history.
@@ -55,13 +55,13 @@ ATH in emails is “all-time high **within the fetched lookback**”, not since 
 Append addresses to `ALERT_EMAILS`:
 
 ```bash
-ALERT_EMAILS=you@example.com,partner@example.com
+ALERT_EMAILS=anderson.chasew@gmail.com,partner@example.com
 ```
 
 ## Local runs
 
 ```bash
-# Live Yahoo pull, structured logs, skips Resend / env recipients
+# Live Yahoo pull, structured logs; sends via Resend if ALERT_EMAILS + RESEND_API_KEY are set
 npm run build
 node dist/index.js --dry-run
 

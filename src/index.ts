@@ -51,27 +51,38 @@ export async function runFromArgv(argv: string[]): Promise<number> {
 
   logJson(baseLog);
 
-  if (decision.action === "alert") {
-    if (cli.dryRun) {
-      logJson({
-        ok: true,
-        phase: "dry_run_skip_send",
-        message: "Would send email (run without --dry-run after setting Resend env)",
-      });
-    } else {
-      const key = config.resendApiKey;
-      if (!key) {
-        throw new Error("RESEND_API_KEY missing");
-      }
-      await sendDrawdownEmail({
-        apiKey: key,
-        from: config.resendFrom,
-        to: config.alertEmails,
-        threshold: config.threshold,
-        decision,
-      });
-      logJson({ ok: true, phase: "email_sent", to: config.alertEmails });
+  const key = config.resendApiKey;
+  const hasRecipients = config.alertEmails.length > 0;
+
+  if (cli.dryRun && (!key || !hasRecipients)) {
+    logJson({
+      ok: true,
+      phase: "dry_run_skip_send",
+      message:
+        "Would send daily email; set ALERT_EMAILS and RESEND_API_KEY to deliver during --dry-run, or run without --dry-run",
+    });
+  } else {
+    if (!key) {
+      throw new Error("RESEND_API_KEY missing");
     }
+    if (!hasRecipients) {
+      throw new Error("ALERT_EMAILS missing");
+    }
+    await sendDrawdownEmail({
+      apiKey: key,
+      from: config.resendFrom,
+      to: config.alertEmails,
+      symbol: config.symbol,
+      threshold: config.threshold,
+      decision,
+    });
+    logJson({
+      ok: true,
+      phase: "email_sent",
+      ...(cli.dryRun ? { dryRun: true } : {}),
+      decisionAction: decision.action,
+      to: config.alertEmails,
+    });
   }
 
   return 0;
