@@ -1,0 +1,27 @@
+services:
+  - type: cron
+    name: drawdown-alert
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: '0 22 * * 1-5'
+    buildCommand: npm ci && npm run build
+    startCommand: node dist/index.js
+    envVars:
+      - key: NODE_VERSION
+        value: '20'
+      # Set ALERT_EMAILS / RESEND_* as secret env vars in the Render Dashboard
+      - key: DRAWDOWN_THRESHOLD
+        value: '0.05'
+      - key: SYMBOL
+        value: '^GSPC'
+      - key: LOOKBACK_DAYS
+        value: '1825'
+      - key: MISSED_RUN_LOOKBACK
+        value: '3'
+      - key: ALERT_EMAILS
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM
+        sync: false
